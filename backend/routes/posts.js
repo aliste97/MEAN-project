@@ -2,6 +2,7 @@ const express = require('express');
 const Post = require ('../models/post');
 const crypto = require("crypto");
 const multer = require('multer'); // Allows to save images
+const checkAuth = require ('../middleware/check-auth');
 
 const router = express.Router();
 const posts = [
@@ -41,7 +42,7 @@ const storage = multer.diskStorage({
 
 router.post ("/api/posts");
 
-router.post ("", multer ({ storage: storage }).single ("image"), (request, response, next) => {
+router.post ("", checkAuth, multer ({ storage: storage }).single ("image"), (request, response, next) => {
     const url = request.protocol + '://' + request.get ("host");
     const createdPost = {
         _id: crypto.randomBytes(16).toString("hex"),
@@ -49,8 +50,6 @@ router.post ("", multer ({ storage: storage }).single ("image"), (request, respo
         content: request.body.content,
         imagePath: url + "/images/" + request.file.filename
     };
-
-    console.log (createdPost);
 
     posts.push (createdPost);
 
@@ -85,7 +84,7 @@ router.post ("", multer ({ storage: storage }).single ("image"), (request, respo
     });
 });
 
-router.put ("/:id", multer ({ storage: storage }).single ("image"), (request, response, next) => { // put replace, patch update
+router.put ("/:id", checkAuth, multer ({ storage: storage }).single ("image"), (request, response, next) => { // put replace, patch update
     let imagePath = request.body.imagePath;
     if (request.file) {
         const url = request.protocol + '://' + request.get ("host");
@@ -172,7 +171,7 @@ router.get ("/:id", (request, response, next) => {
     } // if - else
 });
 
-router.delete ("/:id", (request, response, next) => {
+router.delete ("/:id", checkAuth, (request, response, next) => {
     // With MongoDB
     /* Post.deleteOne ({ _id: request.params.id }).then (result => {
         console.log (result);
